@@ -4,6 +4,7 @@ import cv2 as cv
 import math
 
 
+#  xếp chồng ảnh
 def stackImages(scale,imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
@@ -35,19 +36,13 @@ def stackImages(scale,imgArray):
         ver = hor
     return ver
 
+# ROI ảnh
 def apply_roi(img, roi):
-    # resize ROI to match the original image size
     roi = cv2.resize(src=roi, dsize=(img.shape[1], img.shape[0]))
-
     assert img.shape[:2] == roi.shape[:2]
-
-    # scale ROI to [0, 1] => binary mask
     thresh, roi = cv2.threshold(roi, 150,255, type=cv2.THRESH_BINARY)
-
-    # apply ROI on the original image
     new_img = img * roi
     return new_img
-
 
 imgTem = cv.imread('Battery/Template.PNG')
 img = cv.imread('Battery/BAT0001.PNG')
@@ -57,11 +52,13 @@ imgBlank = np.zeros_like(img)
 height, width = img.shape[:2]
 center = (width/2, height/2)
 
-
+# Tiền xử lý
 img = cv.medianBlur(img,5)
 imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 imBulr = cv2.GaussianBlur(img, (7, 7), 1)
 imgCanny = cv.Canny(imBulr,150, 255)
+
+# Nhận diện đường tròn
 circles = cv.HoughCircles(imgCanny,cv.HOUGH_GRADIENT, 1, 50, param1=50, param2=43,)
 circles = np.round(circles[0, :]).astype("int")
 
@@ -80,6 +77,7 @@ cv2.line(imgCricle, (x_0,y_0),(x_1,y_1),(255, 0, 255),2)
 cv2.putText(imgCricle,'d='+str(circles[0][2]*2), (circles[0][0],circles[0][1]), cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0, 0, 255),1)
 print("đường kính =",format( circles[0][2]*2))
 
+# xoay ảnh
 a = circles[2][0] - circles[1][0]
 b = circles[2][1] - circles[1][1]
 goc = math.acos(abs(-b) / math.sqrt((b**2)+(a**2)))
@@ -100,6 +98,9 @@ rotate_matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=1)
 rotated_image = cv2.warpAffine(src=img, M=rotate_matrix, dsize=(width, height))
 rotated_image1 = rotated_image.copy()
 
+
+
+# xử lý ảnh đã xoay
 Roi = apply_roi(rotated_image, roi)
 AND = cv2.bitwise_xor(rotated_image, Roi )
 imBulr1 = cv2.GaussianBlur(AND, (7, 7), 1)
@@ -108,7 +109,7 @@ res, thresh1 = cv2.threshold(imgGray1,150,255,cv2.THRESH_BINARY)
 res2, thresh2 = cv2.threshold(imgGray1,150,255,cv2.THRESH_BINARY_INV)
 imgCanny1 = cv2.Canny(thresh2,150, 255)
 
-
+# Tìm contours
 contours, hierarchy = cv2.findContours(imgCanny1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 point_list=[]
 for (i, c) in enumerate(contours):
@@ -119,7 +120,6 @@ for (i, c) in enumerate(contours):
         M = cv2.moments(c)
         centroidX = int(M["m10"] / M["m00"])
         centroidY = int(M["m01"] / M["m00"])
-
         cv2.rectangle(rotated_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
@@ -134,7 +134,6 @@ cv2.circle(rotated_image, pt2, 2, (0, 0, 255), 3)
 cv2.line(rotated_image, pt1,pt2,(255, 0, 255),2)
 d=((((x2 - x1 )**2) + ((y2-y1)**2) )**0.5)
 print("Khoang cách d =",format(d))
-
 cv2.putText(rotated_image,'D1='+str(d), pt1,cv2.FONT_HERSHEY_COMPLEX_SMALL,1,(0, 0, 255),1)
 
 
