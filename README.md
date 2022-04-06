@@ -2,7 +2,7 @@
 thư viện sử dụng :
 - Opencv-Python 
 - Numpy
-
+- math
 
 Project gồm có
 foder Battery
