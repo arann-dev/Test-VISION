@@ -123,7 +123,6 @@ for (i, c) in enumerate(contours):
         cv2.rectangle(rotated_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 
-
 pt1 = (point_list[0][0]+point_list[0][2]),(point_list[0][1])
 x1 = point_list[0][0]+point_list[0][2]
 y1 = point_list[0][1]
